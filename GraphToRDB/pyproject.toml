@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=61.0", "schema"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "GraphToRDB"
+version = "0.0.1"
+description = "Convert neo4j JSON data exports to relational tables."
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3.11"
+]
