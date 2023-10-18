@@ -3,7 +3,7 @@
 Please refer to `demo.ipynb` for an interactive demo of the graph transformer package using data from neo4j's demo movie database.
 
 Note that while the recommended usage is to treat the package as a simple object with your relational output as an attribute, 
-several utilities can be accessed for "non-standard" workflows. One such example being the schema validation utilities.  
+several utilities can be accessed for "non-standard" workflows. One such example being the schema validation utilities. The `demo.ipynb` goes over other potential utilities in greater detail.
 
 ### Getting Started
 Download the GraphToRDB directory and reference it as an import within your project as done in the demo notebook. Dependencies/requirements are listed in the `pyproject.toml`. They are also listed in the first cell of `demo.ipynb`.
@@ -18,7 +18,7 @@ The `example_map.yml` may be helpful to use as a template when writing your own 
 * A valid mapping config
     - takes `.yml` files or a dictionary
 * Data in a valid JSON schema
-    - takes a `.json` lines file or a list of JSON objects
+    - takes a `.json` lines file
 
 ### Notes on Mapping Config Schema
 For relationship tables, there is no need to specify the from and to node ids as properties/fkeys. This mapping will be done automatically.

@@ -1,42 +1,58 @@
 from .enforce_schema import Schemas
 from schema import SchemaError
-import json
+from json import loads; from yaml import safe_load
 from os import path
-import yaml
+
 
 validation = Schemas()
 
 class Transformer:
     """
     Takes
-    * data: path to your datafile OR an already in-memory list of dicts (JSON objects)
-    * mapping: path to your map_config.yml OR an already in-memory dict
+    * data: path to your valid JSON lines file
+    * mapping: path to your mapping config YAML or an in-memory dict
+    * begin_conversion: default behavior generates RDB format during validation for efficiency. Alternatively, call generate_rdb() after construction.
 
-    Validate the schema of the data and mappings, will raise error during failure.
-    If successful, access the output through the "rdb" attribute.
-    You may write these sets to csvs or as SQL CREATE & INSERT statements.
+    Key Constructor Operations
+    1. Validates the schema of mappings on construction, will raise error during failure.
+    2. Validates data object by object, writing to RDB format for each success (if begin_conversion), will raise error during failure.
+
+    Attributes
+    * data: the loaded and validated JSON lines file (list of dicts)
+    * mapping: the loaded config (dict)
+    * rdb: a dict containing the output relational data
+
+    Output Options
+    * in-memory: access a dict of tables (tuple of tuples) from self.rdb
+    * csv: call write_to_csv() method
+    * sql statements: call generate_sql() method
     """
-    def __init__(self, data: str, mapping: dict|str) -> None:
+    def __init__(self, data: str, mapping: dict|str, begin_conversion: bool=True) -> None:
         self.data = []
         self.mapping = None
-        self.rdb = {}
 
-        # could use exception handling
+        # Validating mapping
         if isinstance(mapping, dict):
             self.mapping = mapping
         elif isinstance(mapping, str):
             with open(mapping) as f:
-                self.mapping = yaml.safe_load(f)
+                self.mapping = safe_load(f)
+        # Additional validation needed:
+        # input sanitation, no duplicate table names, etc.
         validation.map.validate(self.mapping)
 
+        self._initialize_rdb()
+
+        # Validating data
         with open(data) as f:
             for i, line in enumerate(f):
-                element = json.loads(line)
+                element = loads(line)
                 line_num = i+1
                 self._validate_element(element, line_num)
                 self.data.append(element)
+                self._insert_into_rdb(element, begin_conversion)
 
-    def _validate_element(self, element, index):
+    def _validate_element(self, element: dict, index: int) -> None:
         match element.get('type'):
             case 'node':
                 try:
@@ -51,6 +67,29 @@ class Transformer:
             case _:
                 raise SchemaError(f'key "type" not found in line {index}, invalid JSON schema')
             
+    def _initialize_rdb(self) -> None:
+        self.rdb = {}
+        for entity in self.mapping['entity_tables']:
+            header = ["id"]
+            for column in entity['columns']:
+                header.append(column["name"])
+            self.rdb[entity['table_name']] = {'header': header, 'data': ()}
+
+        for relation in self.mapping['relationship_tables']:
+            header = ["id", "from_id", "to_id"]
+            if relation.get("columns"):
+                for column in entity['columns']:
+                    header.append(column["name"])
+            self.rdb[relation['table_name']] = {'header': header, 'data': ()}
+
+    
+    def _insert_into_rdb(self, object, do) -> None:
+        if do:
+            pass
+    
+    def generate_rdb(self) -> None:
+        pass
+
     def write_to_csv(self, out_path: str) -> None:
         pass
 
@@ -74,7 +113,6 @@ class Transformer:
             return out        
 
     def _sql_create(self) -> str:
-
         creates = []
         for table in self.mapping['entity_tables']:
             top = f"CREATE TABLE {table['table_name']} (\n"
