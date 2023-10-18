@@ -1,25 +1,49 @@
 entity_tables:
-  - map_node_label: ["User"]
-    table_name: "users"
-    # pkey: 
+  - map_node_label: ["Movie"]
+    table_name: "e_movie"
     columns: 
-      - name: "born"
+      - map_node_property: "tagline"
+        name: "tagline"
+        dtype: "str"
+      - map_node_property: "title"
+        name: "title"
         dtype: "string"
-        map_node_property: "born"
-      - name: "firstName"
+      - map_node_property: "released"
+        name: "release_year"
+        dtype: "int"
+
+  - map_node_label: ["Person"]
+    table_name: "e_person"
+    columns: 
+      - map_node_property: "born"
+        name: "year_of_birth"
+        dtype: "int"
+      - map_node_property: "name"
+        name: "name"
         dtype: "string"
-        map_node_property: "name"
-      - name: "kids"
-        dtype: "list"
-        map_node_property: "kids"
 
 relationship_tables:
-  - map_edge_label: "KNOWS"
-    table_name: "knows"
-    # pkey:
-    map_from_node_label: ["User"]
-    map_to_node_label: ["User"]
+  - map_edge_label: "ACTED_IN"
+    table_name: "r_acted_in"
+    map_from_node_label: ["Person"]
+    map_to_node_label: ["Movie"]
     columns:
-      - name: "since"
-        dtype: "int"
-        map_edge_property: "since"
+      - map_edge_property: "roles"
+        name: "roles"
+        dtype: "list"
+
+  - map_edge_label: "DIRECTED"
+    table_name: "r_directed"
+    map_from_node_label: ["Person"]
+    map_to_node_label: ["Movie"]
+
+  - map_edge_label: "PRODUCED"
+    table_name: "r_produced"
+    map_from_node_label: ["Person"]
+    map_to_node_label: ["Movie"]
+
+  - map_edge_label: "WROTE"
+    table_name: "r_wrote"
+    map_from_node_label: ["Person"]
+    map_to_node_label: ["Movie"]
+

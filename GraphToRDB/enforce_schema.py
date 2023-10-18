@@ -52,7 +52,7 @@ class Schemas:
                 'table_name': str,
                 'map_from_node_label': [str],
                 'map_to_node_label': [str],
-                'columns': [{
+                Optional('columns'): [{
                     'name': str,
                     'dtype': str,
                     'map_edge_property': str
