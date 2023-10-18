@@ -1,0 +1,65 @@
+id,from_id,to_id,review_text,rating
+242,167,105,An amazing journey,95.0
+243,167,87,"Silly, but fun",65.0
+244,168,87,The coolest football movie ever,100.0
+245,166,87,Pretty funny at times,62.0
+246,167,97,"Dark, but compelling",85.0
+247,167,95,Slapstick redeemed only by the Robin Williams and Gene Hackman's stellar performances,45.0
+248,167,109,A solid romp,68.0
+249,168,109,"Fun, but a little far fetched",65.0
+500,346,284,An amazing journey,95.0
+501,346,266,"Silly, but fun",65.0
+502,347,266,The coolest football movie ever,100.0
+503,345,266,Pretty funny at times,62.0
+504,346,276,"Dark, but compelling",85.0
+505,346,274,Slapstick redeemed only by the Robin Williams and Gene Hackman's stellar performances,45.0
+506,346,288,A solid romp,68.0
+507,347,288,"Fun, but a little far fetched",65.0
+758,525,463,An amazing journey,95.0
+759,525,445,"Silly, but fun",65.0
+760,526,445,The coolest football movie ever,100.0
+761,524,445,Pretty funny at times,62.0
+762,525,455,"Dark, but compelling",85.0
+763,525,453,Slapstick redeemed only by the Robin Williams and Gene Hackman's stellar performances,45.0
+764,525,467,A solid romp,68.0
+765,526,467,"Fun, but a little far fetched",65.0
+1016,704,642,An amazing journey,95.0
+1017,704,624,"Silly, but fun",65.0
+1018,705,624,The coolest football movie ever,100.0
+1019,703,624,Pretty funny at times,62.0
+1020,704,634,"Dark, but compelling",85.0
+1021,704,632,Slapstick redeemed only by the Robin Williams and Gene Hackman's stellar performances,45.0
+1022,704,646,A solid romp,68.0
+1023,705,646,"Fun, but a little far fetched",65.0
+1274,883,821,An amazing journey,95.0
+1275,883,803,"Silly, but fun",65.0
+1276,884,803,The coolest football movie ever,100.0
+1277,882,803,Pretty funny at times,62.0
+1278,883,813,"Dark, but compelling",85.0
+1279,883,811,Slapstick redeemed only by the Robin Williams and Gene Hackman's stellar performances,45.0
+1280,883,825,A solid romp,68.0
+1281,884,825,"Fun, but a little far fetched",65.0
+1532,1062,1000,An amazing journey,95.0
+1533,1062,982,"Silly, but fun",65.0
+1534,1063,982,The coolest football movie ever,100.0
+1535,1061,982,Pretty funny at times,62.0
+1536,1062,992,"Dark, but compelling",85.0
+1537,1062,990,Slapstick redeemed only by the Robin Williams and Gene Hackman's stellar performances,45.0
+1538,1062,1004,A solid romp,68.0
+1539,1063,1004,"Fun, but a little far fetched",65.0
+1790,1241,1179,An amazing journey,95.0
+1791,1241,1161,"Silly, but fun",65.0
+1792,1242,1161,The coolest football movie ever,100.0
+1793,1240,1161,Pretty funny at times,62.0
+1794,1241,1171,"Dark, but compelling",85.0
+1795,1241,1169,Slapstick redeemed only by the Robin Williams and Gene Hackman's stellar performances,45.0
+1796,1241,1183,A solid romp,68.0
+1797,1242,1183,"Fun, but a little far fetched",65.0
+2048,1420,1358,An amazing journey,95.0
+2049,1420,1340,"Silly, but fun",65.0
+2050,1421,1340,The coolest football movie ever,100.0
+2051,1419,1340,Pretty funny at times,62.0
+2052,1420,1350,"Dark, but compelling",85.0
+2053,1420,1348,Slapstick redeemed only by the Robin Williams and Gene Hackman's stellar performances,45.0
+2054,1420,1362,A solid romp,68.0
+2055,1421,1362,"Fun, but a little far fetched",65.0

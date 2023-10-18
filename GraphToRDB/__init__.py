@@ -1,8 +1,8 @@
 from .enforce_schema import Schemas
 from schema import SchemaError
-from json import loads; from yaml import safe_load
+from json import loads; from yaml import safe_load; import csv
 from os import path
-
+from warnings import warn
 
 validation = Schemas()
 
@@ -37,20 +37,71 @@ class Transformer:
         elif isinstance(mapping, str):
             with open(mapping) as f:
                 self.mapping = safe_load(f)
-        # Additional validation needed:
-        # input sanitation, no duplicate table names, etc.
+        # Additional validation + exception handling needed:
+        # input sanitation, no dup table names, no dup col names,
+        # reserved colnames of "id", "from_id", "to_id"
         validation.map.validate(self.mapping)
 
         self._initialize_rdb()
 
-        # Validating data
+        # Validating data 
+        # additional val needed:
+        # For node labels all members must be unique
         with open(data) as f:
             for i, line in enumerate(f):
                 element = loads(line)
                 line_num = i+1
                 self._validate_element(element, line_num)
                 self.data.append(element)
-                self._insert_into_rdb(element, begin_conversion)
+                self._insert_into_rdb(element, do=begin_conversion)
+
+    def _initialize_rdb(self) -> None:
+        """Create shape of self.rdb and create new hashes for data types and node/edge maps from self.mapping to simplify data conversion/insertion.
+        """
+        self.rdb = {}
+        self._rdb_map_helper = {}
+        self._rdb_label_to_table = {}
+        for entity in self.mapping['entity_tables']:
+            tname = entity["table_name"]
+            # convert node label list to frozenset for a hashable collection
+            # that allows for content comparison (nodes can have many unique labels)
+            map_key = frozenset(entity["map_node_label"])
+            self._rdb_label_to_table[map_key] = tname
+            self._rdb_map_helper[map_key] = {}
+            this_helper = self._rdb_map_helper[map_key]
+
+            header = ["id"]
+            for column in entity['columns']:
+                cname = column["name"]
+                header.append(cname)
+
+                this_helper[cname] = {
+                    "property": column["map_node_property"],
+                    "dtype": self._py_dtype(column["dtype"])
+                }
+            self.rdb[tname] = {'header': header, 'data': []}
+
+        # this code is kind of confusing due to copy paste nature
+        # but with entity and relation swapped
+        # probably a cleaner pattern available
+        for relation in self.mapping['relationship_tables']:
+            tname = relation["table_name"]
+            map_key = relation["map_edge_label"]
+            self._rdb_label_to_table[map_key] = tname
+            self._rdb_map_helper[map_key] = {}
+            this_helper = self._rdb_map_helper[relation["map_edge_label"]]
+
+            header = ["id", "from_id", "to_id"]
+            if relation.get("columns"):
+                for column in relation['columns']:
+                    cname = column["name"]
+                    header.append(cname)
+
+                    this_helper[cname] = {
+                        "property": column["map_edge_property"],
+                        "dtype": self._py_dtype(column["dtype"])
+                    }
+            self.rdb[tname] = {'header': header, 'data': []}
 
     def _validate_element(self, element: dict, index: int) -> None:
         match element.get('type'):
@@ -67,41 +118,56 @@ class Transformer:
             case _:
                 raise SchemaError(f'key "type" not found in line {index}, invalid JSON schema')
             
-    def _initialize_rdb(self) -> None:
-        self.rdb = {}
-        for entity in self.mapping['entity_tables']:
-            header = ["id"]
-            for column in entity['columns']:
-                header.append(column["name"])
-            self.rdb[entity['table_name']] = {'header': header, 'data': ()}
 
-        for relation in self.mapping['relationship_tables']:
-            header = ["id", "from_id", "to_id"]
-            if relation.get("columns"):
-                for column in entity['columns']:
-                    header.append(column["name"])
-            self.rdb[relation['table_name']] = {'header': header, 'data': ()}
-
-    
-    def _insert_into_rdb(self, object, do) -> None:
-        if do:
-            pass
-    
     def generate_rdb(self) -> None:
-        pass
+        for element in self.data:
+            self._insert_into_rdb(element, do=True)
+    
+    def _insert_into_rdb(self, element, do) -> None:
+        if do:
+            match element["type"]:
+                case "node":
+                    key = frozenset(element["labels"])
+                case "relationship":
+                    key = element["label"]
+            
+            table = self._rdb_label_to_table.get(key)
+            if table:
+                record = [int(element["id"])]
+                if element["type"] == "relationship":
+                    record.append(int(element["start"]["id"]))
+                    record.append(int(element["end"]["id"]))
 
-    def write_to_csv(self, out_path: str) -> None:
-        pass
+                columns = self._rdb_map_helper[key]
+                for col in columns:
+                    property = columns[col]["property"]
+                    type_func = columns[col]["dtype"]
+                    if value := element["properties"].get(property):
+                        record.append(type_func(value))
+                    else:
+                        record.append(None) # should be same as appending that value
+
+                self.rdb[table]["data"].append(record)
+
+            else:
+                warn(f'"{key}" not in mapping. "{element["type"]}" of id {element["id"]} will be ignored')
+
+    def write_to_csv(self, write_to_directory: str) -> None:
+        for table in self.rdb:
+            with open(path.join(write_to_directory, f"{table}.csv"), 'w', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow(self.rdb[table]["header"])
+                writer.writerows(self.rdb[table]["data"])
 
     def generate_sql(self, write_to_directory=None) -> dict|None:
-        """Writes PostgreSQL DDL for tables and insert statements.
+        """Writes PostgreSQL CREATE statements for tables.
         
-        If no output path specified, will return dictionary with "CREATE" and "INSERT" keys. Otherwise generates .sql files.
+        If no output path specified, will return dictionary with "CREATE" key. Otherwise generates .sql files.
         Does not write any constraints, keys, indexes, sequences, etc.
         For "list" data types, defaults to TEXT ARRAY type."""
         
         create = self._sql_create()
-        insert = self._sql_insert()
+        # insert = self._sql_insert()
 
         if write_to_directory:
             with open(path.join(write_to_directory, 'CREATE.sql'), 'w') as f:
@@ -109,7 +175,7 @@ class Transformer:
         else:
             out = {}
             out['CREATE'] = create
-            out['INSERT'] = insert
+            # out['INSERT'] = insert
             return out        
 
     def _sql_create(self) -> str:
@@ -137,29 +203,45 @@ class Transformer:
 
         return '\n\n'.join(creates)
 
-    def _sql_insert(self) -> dict:
-        return None
+    # NOT IMPLEMENTED
+    # def _sql_insert(self) -> dict:
+    #     statements = []
+    #     for table in self.rdb:
+    #         top = f'INSERT INTO {table} ({", ".join(self.rdb[table]["header"])}) VALUES (\n'
+    #         bottom = []
+    #         for record in self.rdb[table]["data"]:
+    #             vals = ''
+    #             for value in enumerate(record):
+    #                 pass
 
     @staticmethod
     def _sql_dtype(type_str: str) -> str:
+        type_str = type_str.lower()
         types = {
-            "string": "TEXT",
-            "str": "TEXT",
-            "int": "INTEGER",
-            "integer": "INTEGER",
-            "float": "NUMERIC",
-            "list": "TEXT ARRAY"
+            "text":     "TEXT",
+            "string":   "TEXT",
+            "str":      "TEXT",
+            "int":      "INTEGER",
+            "integer":  "INTEGER",
+            "float":    "NUMERIC",
+            "numeric":  "NUMERIC",
+            "list":     "TEXT ARRAY",
+            "array":    "TEXT ARRAY"
         }
         return types.get(type_str)
     
     @staticmethod
     def _py_dtype(type_str: str) -> str:
+        type_str = type_str.lower()
         types = {
-            "string": str,
-            "str": str,
-            "int": int,
-            "integer": int,
-            "float": float,
-            "list": list
+            "text":     lambda x: str(x),
+            "string":   lambda x: str(x),
+            "str":      lambda x: str(x),
+            "int":      lambda x: int(x),
+            "integer":  lambda x: int(x),
+            "float":    lambda x: float(x),
+            "numeric":  lambda x: float(x),
+            "list":     lambda x: list(x) if not isinstance(x, list) else x,
+            "array":    lambda x: list(x) if not isinstance(x, list) else x
         }
         return types.get(type_str)

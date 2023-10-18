@@ -47,3 +47,15 @@ relationship_tables:
     map_from_node_label: ["Person"]
     map_to_node_label: ["Movie"]
 
+  - map_edge_label: "REVIEWED"
+    table_name: "r_reviewed"
+    map_from_node_label: ["Person"]
+    map_to_node_label: ["Movie"]
+    columns:
+      - map_edge_property: "summary"
+        name: "review_text"
+        dtype: "text"
+      - map_edge_property: "rating"
+        name: "rating"
+        dtype: "numeric"
+
