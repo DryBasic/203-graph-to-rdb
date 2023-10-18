@@ -23,7 +23,7 @@ class Transformer:
     * rdb: a dict containing the output relational data
 
     Output Options
-    * in-memory: access a dict of tables (tuple of tuples) from self.rdb
+    * in-memory: access a dict of tables (list of lists) from self.rdb
     * csv: call write_to_csv() method
     * sql statements: call generate_sql() method
     """
