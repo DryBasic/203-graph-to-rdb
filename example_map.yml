@@ -1,0 +1,25 @@
+entity_tables:
+  - map_node_label: ["User"]
+    table_name: "users"
+    # pkey: 
+    columns: 
+      - name: "born"
+        dtype: "string"
+        map_node_property: "born"
+      - name: "firstName"
+        dtype: "string"
+        map_node_property: "name"
+      - name: "kids"
+        dtype: "list"
+        map_node_property: "kids"
+
+relationship_tables:
+  - map_edge_label: "KNOWS"
+    table_name: "knows"
+    # pkey:
+    map_from_node_label: ["User"]
+    map_to_node_label: ["User"]
+    columns:
+      - name: "since"
+        dtype: "int"
+        map_edge_property: "since"
