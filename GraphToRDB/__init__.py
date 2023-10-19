@@ -120,6 +120,7 @@ class Transformer:
             
 
     def generate_rdb(self) -> None:
+        self._initialize_rdb()
         for element in self.data:
             self._insert_into_rdb(element, do=True)
     
